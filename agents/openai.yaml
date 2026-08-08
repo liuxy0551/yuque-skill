@@ -1,0 +1,4 @@
+interface:
+  display_name: "Yuque Skill"
+  short_description: "Search, read, and write Yuque docs with cookie-authenticated Web APIs"
+  default_prompt: "Use the existing yuque.py CLI commands directly for Yuque search/read/write tasks; do not re-probe or guess Web API endpoints unless the CLI fails and the user is debugging the skill."
