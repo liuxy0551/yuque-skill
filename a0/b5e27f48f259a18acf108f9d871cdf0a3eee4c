@@ -1,0 +1,32 @@
+.github/workflows/test.yml
+  h_0c940a947252a6 1-20
+.gitignore
+  h_0c940a947252a6 1-6
+README.md
+  h_0c940a947252a6 1-423
+SECURITY.md
+  h_0c940a947252a6 1-38
+SKILL.md
+  h_0c940a947252a6 1-317
+agents/openai.yaml
+  h_0c940a947252a6 1-4
+references/api.md
+  h_0c940a947252a6 1-276
+requirements.txt
+  h_0c940a947252a6 1
+scripts/yuque.py
+  h_0c940a947252a6 1-2534
+tests/test_yuque.py
+  h_0c940a947252a6 1-654
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "a0b5e27f48f259a18acf108f9d871cdf0a3eee4c",
+  "prompts": {},
+  "humans": {
+    "h_0c940a947252a6": {
+      "author": "liuyi <liuyi@dtstack.com>"
+    }
+  }
+}
