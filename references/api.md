@@ -239,6 +239,33 @@ GET /api/catalog_nodes?book_id={book_id}
 }
 ```
 
+## 文档导出 `/api/docs/{id}/export`
+
+用于获取单篇文档转换后的 Markdown 原文下载地址：
+
+```http
+POST /api/docs/{doc_id}/export
+Content-Type: application/json
+x-csrf-token: ...
+
+{
+  "type": "markdown",
+  "force": 0,
+  "options": "{\"latexType\":2,\"useMdai\":1}"
+}
+```
+
+响应 `data` 包含签名临时下载链接：
+
+```json
+{
+  "data": {
+    "url": "https://.../export/...?sign=..."
+  }
+}
+```
+
+客户端直接向该 `url` 发送 GET 请求即可下载原始 Markdown 字节。
 
 ## Unicode / Emoji
 

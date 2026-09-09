@@ -1,18 +1,20 @@
 ---
 name: yuque-skill
-description: 当用户需要搜索语雀内容，或提供语雀链接并需要读取、总结、提取、核对、创建、更新或发布语雀文档时使用。通过普通 `_yuque_session` 登录态访问语雀 Web API，目标实例直接从语雀 URL 识别；不依赖 VIP Token、官方 MCP、Playwright 或 Chromium。
+description: 当用户需要搜索语雀内容，或提供语雀链接并需要读取、总结、提取、核对、创建、更新、发布语雀文档，或批量导出知识库文档为 Markdown 时使用。通过普通 `_yuque_session` 登录态访问语雀 Web API，目标实例直接从语雀 URL 识别；不依赖 VIP Token、官方 MCP、Playwright 或 Chromium。
 ---
 
 # Yuque Skill
 
 ## 目标
 
-统一处理语雀搜索、读取与写入。
+统一处理语雀搜索、读取、写入与批量导出。
 
 统一入口：
 
 ```bash
 python3 scripts/yuque.py <command> ...
+# 批量导出知识库：
+python3 scripts/export_yuque_book.py --book-url <url> --out <dir>
 ```
 
 ## 命令执行原则
@@ -25,6 +27,7 @@ python3 scripts/yuque.py <command> ...
 - 读取 → `read`
 - 列出知识库 → `list`
 - 目录树 → `toc`
+- 批量导出知识库 → `scripts/export_yuque_book.py`
 - 创建 → `create`
 - 更新 → `update`
 - 发布 → `publish`
@@ -277,6 +280,26 @@ GET /api/catalog_nodes?book_id=<book_id>
 脚本自动根据 `parent_uuid → uuid` 关系解析。目录名重复时要求完整路径。高级场景仍支持 `--parent-uuid`。
 
 不指定父节点时使用根目录。
+
+## 批量导出知识库
+
+将指定知识库的全部 DOC 文档导出为本地 Markdown 文件（按目录层级组织，支持断点续传）：
+
+```bash
+python3 scripts/export_yuque_book.py \
+  --book-url "<book-url>" \
+  --out "<output-dir>" \
+  [--limit N] [--sleep SEC] [--retry N]
+```
+
+核心特性与行为：
+
+- 自动读取知识库目录树（TOC），仅处理真实 DOC 文档；
+- 自动清洗非法字符并生成对应目录树层级路径；
+- 同目录下重名文档自动追加 `_doc{id}` 后缀，避免互相覆盖；
+- 本地已存在且非空的 `.md` 自动跳过，天然支持断点续传；
+- 导出的 Markdown 顶部自动插入 `> 语雀原文: <doc-url>` 链接；
+- 批量处理可选参数：`--limit` 限制导出篇数（用于试跑），`--sleep` 控制每篇间隔秒数（默认 0.3s，防止接口限流），`--retry` 单篇失败重试次数（默认 2 次）。
 
 ## 文档标题与正文 H1
 
