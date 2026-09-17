@@ -1,0 +1,22 @@
+.github/workflows/test.yml
+  h_0c940a947252a6 18
+README.md
+  h_0c940a947252a6 27,139
+SKILL.md
+  h_0c940a947252a6 20-21,53,288,291,296-301,306-307,458-459
+scripts/export_yuque_book.py
+  h_0c940a947252a6 47-93,151-155,167-182
+tests/test_yuque.py
+  h_0c940a947252a6 855-879,882
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "55a14db938822ac3fd18b94e64d12188b0697ef2",
+  "prompts": {},
+  "humans": {
+    "h_0c940a947252a6": {
+      "author": "liuyi <liuyi@dtstack.com>"
+    }
+  }
+}
