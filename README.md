@@ -24,7 +24,7 @@
 Python 3.10+，除原生标准库外仅依赖 `requests`（若环境已安装则无需任何操作）：
 
 ```bash
-pip install requests  # 仅当缺失 requests 时安装
+pip install -r scripts/requirements.txt  # 或 pip install requests
 ```
 
 ### 2. 配置登录凭证
@@ -136,4 +136,4 @@ python3 scripts/yuque.py publish "https://your-team.yuque.com/team/book/doc-slug
 
 - 🤖 **Agent 调度指令规范**：[SKILL.md](./SKILL.md)
 - 🔌 **Web 内部 API 逆向细节备忘**：[references/api.md](./references/api.md)
-- 🔒 **安全边界与隔离说明**：[SECURITY.md](./SECURITY.md)
+- 🔒 **安全边界与隔离说明**：[references/security.md](./references/security.md)

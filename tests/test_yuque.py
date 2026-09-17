@@ -852,5 +852,31 @@ class TestDoctor(unittest.TestCase):
         self.assertIn("💡", fake.seen)
 
 
+class TestExportSubtree(unittest.TestCase):
+    def test_filter_subtree_and_strip_prefix(self):
+        export_mod_path = Path(__file__).resolve().parents[1] / "scripts" / "export_yuque_book.py"
+        spec_exp = importlib.util.spec_from_file_location("export_yuque_book", export_mod_path)
+        export_mod = importlib.util.module_from_spec(spec_exp)
+        assert spec_exp.loader is not None
+        spec_exp.loader.exec_module(export_mod)
+
+        nodes = [
+            {"uuid": "u1", "parent_uuid": "", "title": "产品", "type": "TITLE", "path": "产品"},
+            {"uuid": "u2", "parent_uuid": "u1", "title": "AIWorks", "type": "DOC", "doc_id": 100, "url": "slug-aiworks", "path": "产品/AIWorks"},
+            {"uuid": "u3", "parent_uuid": "u2", "title": "工程化", "type": "TITLE", "path": "产品/AIWorks/工程化"},
+            {"uuid": "u4", "parent_uuid": "u3", "title": "组件", "type": "DOC", "doc_id": 101, "url": "slug-comp", "path": "产品/AIWorks/工程化/组件"},
+            {"uuid": "u5", "parent_uuid": "u1", "title": "其他", "type": "DOC", "doc_id": 102, "url": "slug-other", "path": "产品/其他"},
+        ]
+
+        docs, prefix = export_mod.filter_subtree(nodes, "slug-aiworks")
+        self.assertEqual(prefix, "产品")
+        self.assertEqual(len(docs), 2)
+        self.assertEqual(docs[0]["doc_id"], 100)
+        self.assertEqual(docs[0]["path"], "AIWorks")
+        self.assertEqual(docs[1]["doc_id"], 101)
+        self.assertEqual(docs[1]["path"], "AIWorks/工程化/组件")
+
+
 if __name__ == "__main__":
     unittest.main()
+

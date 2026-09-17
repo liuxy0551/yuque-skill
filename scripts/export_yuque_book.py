@@ -44,6 +44,53 @@ def flatten_docs(nodes: list[dict]) -> list[dict]:
     return docs
 
 
+def filter_subtree(
+    nodes: list[dict], target_slug_or_id: str
+) -> tuple[list[dict], str]:
+    """提取指定文档节点及其全部下级节点，并计算需要去除的前缀路径"""
+    target_node = None
+    for n in nodes:
+        if n.get("url") == target_slug_or_id or str(n.get("doc_id")) == str(target_slug_or_id):
+            target_node = n
+            break
+
+    # 未找到匹配的目标节点时抛出异常
+    if not target_node:
+        raise yuque.YuqueError(f"在知识库目录中未找到文档: {target_slug_or_id}")
+
+    target_uuid = str(target_node.get("uuid") or "")
+    by_parent: dict[str, list[dict]] = {}
+    for n in nodes:
+        pid = str(n.get("parent_uuid") or "")
+        by_parent.setdefault(pid, []).append(n)
+
+    subtree_nodes: list[dict] = [target_node]
+
+    # 递归收集所有子孙节点
+    def collect(pid: str):
+        for child in by_parent.get(pid, []):
+            subtree_nodes.append(child)
+            collect(str(child.get("uuid") or ""))
+
+    collect(target_uuid)
+
+    docs = [dict(n) for n in subtree_nodes if n.get("type") == "DOC" and n.get("doc_id")]
+
+    # 计算目标节点在知识库中的祖先目录前缀
+    target_path = target_node.get("path") or ""
+    parent_prefix = target_path.rsplit("/", 1)[0] if "/" in target_path else ""
+
+    if parent_prefix:
+        prefix_with_slash = f"{parent_prefix}/"
+        for d in docs:
+            p = d.get("path") or ""
+            # 若路径包含祖先目录前缀，截取相对子路径
+            if p.startswith(prefix_with_slash):
+                d["path"] = p[len(prefix_with_slash):]
+
+    return docs, parent_prefix
+
+
 def safe_filename(path: str) -> str:
     """把知识库 path(例: 新人指南/新人文档) 转成安全相对路径(无 .md)."""
     parts = [p.strip() for p in path.split("/") if p.strip()]
@@ -101,8 +148,11 @@ def with_yuque_link(content: bytes, full_url: str) -> bytes:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="导出语雀知识库全部 DOC 为 Markdown")
-    ap.add_argument("--book-url", required=True)
+    ap = argparse.ArgumentParser(description="导出语雀知识库全部或指定节点 DOC 为 Markdown")
+    ap.add_argument("--book-url", "--url", dest="url", required=True,
+                    help="知识库或文档 URL")
+    ap.add_argument("--doc-url", default=None,
+                    help="指定导出的根文档 URL (可选, 也可以直接传给 --url)")
     ap.add_argument("--out", required=True, help="输出根目录")
     ap.add_argument("--limit", type=int, default=None,
                     help="只处理前 N 篇(用于试跑)")
@@ -114,10 +164,22 @@ def main() -> int:
     out_root = Path(args.out)
     out_root.mkdir(parents=True, exist_ok=True)
 
-    book_info = yuque.parse_yuque_url(args.book_url)
-    toc = yuque.toc_book(args.book_url)
-    docs = flatten_docs(toc.get("nodes") or [])
-    print(f"知识库 {args.book_url}: 共 {len(docs)} 篇真实 DOC 文档", file=sys.stderr)
+    target_input_url = args.doc_url or args.url
+    book_info = yuque.parse_yuque_url(target_input_url)
+    origin = book_info["origin"]
+    book_base_url = f"{origin}/{book_info['user']}/{book_info['book']}"
+
+    toc = yuque.toc_book(book_base_url)
+    all_nodes = toc.get("nodes") or []
+
+    target_doc = book_info.get("doc")
+    # 判断是否指定了子文档或单篇文档节点
+    if target_doc:
+        docs, _ = filter_subtree(all_nodes, target_doc)
+        print(f"文档节点 {target_input_url} 及下级: 共 {len(docs)} 篇真实 DOC 文档", file=sys.stderr)
+    else:
+        docs = flatten_docs(all_nodes)
+        print(f"知识库 {book_base_url}: 共 {len(docs)} 篇真实 DOC 文档", file=sys.stderr)
 
     if args.limit:
         docs = docs[: args.limit]
@@ -126,8 +188,6 @@ def main() -> int:
     # 为每篇计算唯一相对路径(重复 path 追加 _doc{id} 后缀)
     rel_paths = dedupe_paths(docs)
 
-    origin = book_info["origin"]
-    book_base_url = f"{origin}/{book_info['user']}/{book_info['book']}"
     client = yuque.YuqueClient(origin)
 
     # 构建 doc_id -> 语雀 URL 映射
